@@ -26,4 +26,3 @@ $ bun lint
 
 $ bun format
 ```
-
