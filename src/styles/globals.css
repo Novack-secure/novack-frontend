@@ -6,10 +6,6 @@
   }
 }
 
-body {
-  @apply bg-gray-950;
-}
-
 @theme {
   --color-primary: #010440;
 }
