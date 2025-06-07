@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --tw-color-primary: #010440;
+  }
+}
+
+@theme {
+  --color-primary: #010440;
+}
+
+@layer utilities {
+  .bg-primary {
+    background-color: var(--tw-color-primary);
+  }
+  .text-primary {
+    color: var(--tw-color-primary);
+  }
+  .border-primary {
+    border-color: var(--tw-color-primary);
+  }
+}
