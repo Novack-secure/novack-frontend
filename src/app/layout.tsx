@@ -7,6 +7,7 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({
+<<<<<<< Updated upstream
 	children,
 }: Readonly<{
 	children: React.ReactNode;
@@ -16,4 +17,15 @@ export default function RootLayout({
 			<body>{children}</body>
 		</html>
 	);
+=======
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en" dir="ltr" className={inter.className}>
+      <body>{children}</body>
+    </html>
+  );
+>>>>>>> Stashed changes
 }
