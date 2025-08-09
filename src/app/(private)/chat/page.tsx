@@ -10,6 +10,8 @@ export default function Page() {
         <div className="flex w-full items-center gap-2 mb-3">
           {/* Search bar */}
           <Input type="email" placeholder="Nombre" />
+
+          <Input type="email" placeholder="Email" />
           <Button type="submit" variant="outline">
             <Search />
           </Button>

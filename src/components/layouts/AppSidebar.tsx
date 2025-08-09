@@ -16,6 +16,7 @@ import {
 import {
   Collapsible,
   CollapsibleTrigger,
+  CollapsibleContent,
 } from "@/components/ui/collapsible";
 
 import React from "react";
@@ -32,6 +33,7 @@ import {
   Monitor,
   ClipboardList,
   CreditCard,
+  ChevronDown,
   ChevronRight,
   Settings,
   UserCog,
@@ -75,8 +77,8 @@ const collapsibleItems = [
       {
         title: "Permisos",
         url: "/management/supplier/permissionAdmin",
-        icon: Lock,
-      }
+        icon: BadgeDollarSign,
+      },
     ]
   },
   {
@@ -92,8 +94,8 @@ const collapsibleItems = [
       {
         title: "Admin subscipciones",
         url: "/management/supplier/subscription",
-        icon: Monitor,
-      }
+        icon: Users,
+      },
     ]
   }
 ];
