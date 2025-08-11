@@ -1,0 +1,133 @@
+{
+  "navbar": {
+    "home": "Home",
+    "pricing": "Pricing",
+    "features": "Features",
+    "cta": "Find a plan",
+    "language": "Language"
+  },
+  "blog": {
+    "title": "Novack Journal",
+    "subtitle": "Ideas, insights and updates from the Novack team.",
+    "notFoundTitle": "Post Not Found",
+    "notFoundSubtitle": "The article doesn't exist or was moved.",
+    "categories": {
+      "All": "All",
+      "Desarrollo": "Development",
+      "Proceso": "Process",
+      "Mejoras": "Improvements"
+    },
+    "empty": "No posts found in this category.",
+    "by": "By"
+  },
+  "home": {
+    "hero": {
+      "titleLine1": "Manage every minute,",
+      "titleLine2": "find every point.",
+      "description": "Plan your appointments with precision, monitor locations in real time and optimize your day.",
+      "primaryCta": "Create an account",
+      "secondaryCta": "Request a demo"
+    },
+    "cta": {
+      "titlePrefix": "Ready to transform your",
+      "titleHighlight": "business?",
+      "description": "Join thousands of businesses already optimizing their operations with our platform.",
+      "primaryCta": "Start free",
+      "secondaryCta": "Schedule demo"
+    },
+    "stats": {
+      "activeUsers": "Active Users",
+      "growingDaily": "Growing daily",
+      "uptime": "Uptime",
+      "reliableService": "Reliable service",
+      "support": "Support",
+      "alwaysAvailable": "Always available"
+    },
+    "example": {
+      "titleHtml": "Secure your operations.<br /> Simplify your workflow.",
+      "weeklyActivity": "Weekly Activity",
+      "dow": {"mon": "Mon", "tue": "Tue", "wed": "Wed", "thu": "Thu", "fri": "Fri", "sat": "Sat", "sun": "Sun"},
+      "monitorTitle": "Monitor your users",
+      "monitorDescription": "Track their journey, enhance productivity, and ensure every move is accounted for in real time.",
+      "securityTitle": "Enterprise-Grade Security",
+      "securityDescription": "Built with the highest security standards to protect your data and your clients' privacy."
+    }
+  }
+  ,
+  "pricing": {
+    "why": {
+      "badge": "Why businesses choose Novack",
+      "titlePrefix": "Why choose",
+      "subtitle": "We're not just another appointment tool. We're your strategic partner with enterprise-grade security and unmatched performance."
+    },
+    "trust": {
+      "title": "Trusted by Industry Leaders",
+      "subtitle": "Join thousands of businesses that trust Novack with their critical operations",
+      "fortuneNote": "Companies trust us",
+      "hipaa": "HIPAA compliant",
+      "bank": "Bank-level security"
+    },
+    "header": {
+      "badge": "Choose your perfect plan",
+      "titlePrefix": "Simple, Transparent",
+      "titleHighlight": "Pricing",
+      "subtitle": "Start free, scale as you grow. All plans include core features with enterprise-grade security."
+    },
+    "billing": {
+      "monthly": "Monthly",
+      "annual": "Annual",
+      "save": "Save up to 30%"
+    },
+    "plan": {
+      "mostPopular": "Most Popular",
+      "ctaPrefix": "Get started with"
+    },
+    "features": {
+      "allComparison": "All Features Comparison"
+    },
+    "trustItems": {
+      "trial": "14-day free trial",
+      "noCard": "No credit card required",
+      "cancel": "Cancel anytime"
+    },
+    "faq": {
+      "titlePrefix": "Frequently Asked",
+      "titleHighlight": "Questions"
+    },
+    "success": {
+      "badge": "Success stories from our customers",
+      "titlePrefix": "Success",
+      "titleHighlight": "Stories",
+      "subtitle": "See how businesses like yours are transforming their operations with Novack.",
+      "roiTitle": "Calculate Your ROI",
+      "roiSubtitle": "See how much you could save with Novack",
+      "roi": {
+        "monthlySavings": "Monthly savings",
+        "timeSaved": "Time saved/week",
+        "sixMonths": "ROI in 6 months"
+      }
+    }
+  },
+  "footer": {
+    "description": "Transform your operations with our management platform. Join thousands of companies that trust Novack.",
+    "newsletter": {
+      "title": "Stay Updated",
+      "subtitle": "Get the latest updates and insights delivered to your inbox.",
+      "placeholder": "Enter your email"
+    },
+    "company": {
+      "title": "Company",
+      "features": "Features",
+      "blog": "Blog",
+      "contact": "Contact"
+    },
+    "links": {
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
+      "cookies": "Cookie Policy"
+    },
+    "copyright": "© 2024 Novack. All rights reserved."
+  }
+}
+
+

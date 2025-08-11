@@ -1,8 +1,8 @@
-import { Navbar } from "@/components/home/ui/navbar/navbar";
-import CtaSection from "@/components/home/ui/secctions/cta/cta-section";
-import HeroSection from "@/components/home/ui/secctions/hero/hero-section";
-import Footer from "@/components/home/ui/footer/footer";
-import Example from "@/components/home/ui/secctions/example/example";
+import { Navbar } from "@/components/public/ui/navbar/navbar";
+import Footer from "@/components/ui/footer/footer";
+import CtaSection from "@/components/public/home/ui/secctions/cta/cta-section";
+import HeroSection from "@/components/public/home/ui/secctions/hero/hero-section";
+import Example from "@/components/public/home/ui/secctions/example/example";
 
 export default function page() {
   return (

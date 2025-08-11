@@ -1,0 +1,134 @@
+{
+  "navbar": {
+    "home": "Inicio",
+    "pricing": "Precios",
+    "features": "Características",
+    "cta": "Elegir un plan",
+    "language": "Idioma"
+  },
+  "blog": {
+    "title": "El Diario Novack",
+    "subtitle": "Ideas, perspectivas y actualizaciones del equipo Novack.",
+    "notFoundTitle": "Artículo no encontrado",
+    "notFoundSubtitle": "El artículo no existe o fue movido.",
+    "categories": {
+      "All": "Todos",
+      "Desarrollo": "Desarrollo",
+      "Proceso": "Proceso",
+      "Mejoras": "Mejoras"
+    },
+    "empty": "No se encontraron publicaciones en esta categoría.",
+    "by": "Por"
+  },
+  "home": {
+    "hero": {
+      "titleLine1": "Gestiona cada minuto,",
+      "titleLine2": "encuentra cada punto.",
+      "description": "Planifica tus citas con precisión, monitorea ubicaciones en tiempo real y optimiza tu día.",
+      "primaryCta": "Crear una cuenta",
+      "secondaryCta": "Solicitar demo"
+    },
+    "cta": {
+      "titlePrefix": "¿Listo para transformar tu",
+      "titleHighlight": "negocio?",
+      "description": "Únete a miles de empresas que ya optimizan sus operaciones con nuestra plataforma.",
+      "primaryCta": "Comenzar gratis",
+      "secondaryCta": "Agendar demo"
+    },
+    "stats": {
+      "activeUsers": "Usuarios activos",
+      "growingDaily": "Creciendo cada día",
+      "uptime": "Disponibilidad",
+      "reliableService": "Servicio confiable",
+      "support": "Soporte",
+      "alwaysAvailable": "Siempre disponible"
+    },
+    "example": {
+      "titleHtml": "Protege tus operaciones.<br /> Simplifica tu flujo de trabajo.",
+      "weeklyActivity": "Actividad semanal",
+      "dow": {"mon": "Lun", "tue": "Mar", "wed": "Mié", "thu": "Jue", "fri": "Vie", "sat": "Sáb", "sun": "Dom"},
+      "monitorTitle": "Monitorea a tus usuarios",
+      "monitorDescription": "Sigue su recorrido, mejora su productividad y garantiza cada acción en tiempo real.",
+      "securityTitle": "Seguridad de nivel empresarial",
+      "securityDescription": "Construida con los más altos estándares para proteger tus datos y la privacidad de tus clientes."
+    }
+  }
+  ,
+  "pricing": {
+    "why": {
+      "badge": "Por qué las empresas eligen Novack",
+      "titlePrefix": "¿Por qué elegir",
+      "subtitle": "No somos otra herramienta de citas. Somos tu socio estratégico en crecimiento, con seguridad empresarial y rendimiento incomparable."
+    },
+    "trust": {
+      "title": "Confiado por líderes de la industria",
+      "subtitle": "Únete a miles de empresas que confían en Novack para sus operaciones críticas",
+      "fortuneNote": "Empresas confían en nosotros",
+      "hipaa": "Cumplimiento HIPAA",
+      "bank": "Seguridad de nivel bancario"
+    },
+    "header": {
+      "badge": "Elige tu plan perfecto",
+      "titlePrefix": "Precios simples y transparentes",
+      "titleHighlight": "",
+      "subtitle": "Empieza gratis y escala a medida que creces. Todos los planes incluyen funciones esenciales con seguridad de nivel empresarial."
+    },
+    "billing": {
+      "monthly": "Mensual",
+      "annual": "Anual",
+      "save": "Ahorra hasta 30%"
+    },
+    "plan": {
+      "mostPopular": "Más popular",
+      "ctaPrefix": "Comenzar con"
+    },
+    "features": {
+      "allComparison": "Comparativa completa de funciones"
+    },
+    "trustItems": {
+      "trial": "Prueba gratis de 14 días",
+      "noCard": "No requiere tarjeta",
+      "cancel": "Cancela cuando quieras"
+    },
+    "faq": {
+      "titlePrefix": "Preguntas",
+      "titleHighlight": "Frecuentes"
+    },
+    "success": {
+      "badge": "Historias de éxito de nuestros clientes",
+      "titlePrefix": "Historias de",
+      "titleHighlight": "Éxito",
+      "subtitle": "Descubre cómo empresas como la tuya transforman sus operaciones con Novack.",
+      "roiTitle": "Calcula tu ROI",
+      "roiSubtitle": "Descubre cuánto podrías ahorrar con Novack",
+      "roi": {
+        "monthlySavings": "Ahorro mensual",
+        "timeSaved": "Tiempo ahorrado/semana",
+        "sixMonths": "ROI en 6 meses"
+      }
+    }
+  },
+  
+  "footer": {
+    "description": "Transforma tus operaciones con nuestra plataforma de gestión. Únete a miles de empresas que confían en Novack.",
+    "newsletter": {
+      "title": "Mantente al día",
+      "subtitle": "Recibe novedades y perspectivas directamente en tu correo.",
+      "placeholder": "Ingresa tu correo"
+    },
+    "company": {
+      "title": "Compañía",
+      "features": "Características",
+      "blog": "Blog",
+      "contact": "Contacto"
+    },
+    "links": {
+      "privacy": "Política de Privacidad",
+      "terms": "Términos de Servicio",
+      "cookies": "Política de Cookies"
+    },
+    "copyright": "© 2024 Novack. Todos los derechos reservados."
+  }
+}
+
+

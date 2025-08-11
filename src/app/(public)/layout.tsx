@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Navbar } from "../../components/home/ui/navbar/navbar";
 
 export const metadata: Metadata = {
   title: "Novack Redesigning the security",
