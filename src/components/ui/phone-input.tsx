@@ -15,6 +15,7 @@ const COUNTRIES: Country[] = [
   { code: "CL", dial: "+56", label: "Chile" },
   { code: "CO", dial: "+57", label: "Colombia" },
   { code: "PE", dial: "+51", label: "Perú" },
+  { code: "CR", dial: "+506", label: "Costa Rica" },
   { code: "US", dial: "+1", label: "Estados Unidos" },
 ];
 
@@ -31,6 +32,25 @@ export function PhoneInput({
   onChange,
   placeholder,
 }: PhoneInputProps) {
+  function groupForDisplay(countryCode: string, digits: string): string {
+    if (countryCode === "CR") {
+      // Costa Rica: 8 dígitos nacionales -> XXXX XXXX
+      const a = digits.slice(0, 4);
+      const b = digits.slice(4, 8);
+      const rest = digits.slice(8);
+      return [a, b, rest].filter(Boolean).join(" ").trim();
+    }
+    if (countryCode === "US") {
+      // US ejemplo: XXX XXX XXXX
+      const a = digits.slice(0, 3);
+      const b = digits.slice(3, 6);
+      const c = digits.slice(6, 10);
+      const rest = digits.slice(10);
+      return [a, b, c, rest].filter(Boolean).join(" ").trim();
+    }
+    // Por defecto: agrupar en bloques de 3
+    return digits.replace(/(\d{3})(?=\d)/g, "$1 ").trim();
+  }
   const initial = useMemo(() => {
     const found = COUNTRIES.find((c) => value?.startsWith(c.dial));
     if (found) {
@@ -45,20 +65,21 @@ export function PhoneInput({
 
   useEffect(() => {
     const c = COUNTRIES.find((x) => x.code === country) ?? COUNTRIES[0];
-    const formatted = national.replace(/[^0-9]/g, "");
-    // Formateo simple en grupos de 3-3-...
-    const grouped = formatted.replace(/(\d{3})(?=\d)/g, "$1 ").trim();
-    onChange(`${c.dial}${grouped ? " " + grouped : ""}`);
+    const digits = national.replace(/[^0-9]/g, "");
+    // Mostrar agrupado, pero enviar E.164 sin espacios
+    const groupedDisplay = groupForDisplay(country, digits);
+    const e164 = `${c.dial}${digits}`;
+    onChange(e164);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [country, national]);
 
   return (
-    <div className="flex gap-2">
+    <div className="w-full flex gap-2 items-stretch">
       <select
         aria-label="País"
         value={country}
         onChange={(e) => setCountry(e.target.value)}
-        className="min-w-[110px] rounded-xl bg-white/10 border border-white/20 text-white px-3 py-2 text-sm focus:outline-none focus:ring-0 focus:border-white/40"
+        className="w-[96px] sm:w-[110px] h-11 rounded-xl bg-white/10 border border-white/20 text-white px-3 text-sm focus:outline-none focus:ring-0 focus:border-white/40"
       >
         {COUNTRIES.map((c) => (
           <option
@@ -76,9 +97,9 @@ export function PhoneInput({
         inputMode="numeric"
         pattern="[0-9\s]*"
         placeholder={placeholder || "Número"}
-        value={national}
+        value={groupForDisplay(country, national.replace(/[^0-9]/g, ""))}
         onChange={(e) => setNational(e.target.value)}
-        className="flex-1 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 px-3 py-2 focus:outline-none focus:ring-0 focus:border-white/40"
+        className="flex-1 h-11 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 px-3 focus:outline-none focus:ring-0 focus:border-white/40"
       />
     </div>
   );

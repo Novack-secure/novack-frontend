@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PhoneInput } from "@/components/ui/phone-input";
-import { registrationSteps } from "@/data/steps";
+// import { registrationSteps } from "@/data/steps";
 
 import type { SupplierData, EmployeeData } from "@/types/registration";
+import { extractDigits, lastNDigits } from "@/lib/api";
 
 interface SupplierInfoStepProps {
   employeeData: EmployeeData;
@@ -53,8 +54,8 @@ export function SupplierInfoStep({
           className="flex-1 flex flex-col"
         >
           <div className="flex-1 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-3xl mx-auto w-full">
+              <div className="space-y-2 min-w-0">
                 <Label htmlFor="supplier_name" className="text-white/80">
                   Supplier name *
                 </Label>
@@ -69,7 +70,7 @@ export function SupplierInfoStep({
                     },
                   })}
                   placeholder="Your company name"
-                  className="rounded-xl bg-white/10 border-white/20 text-white placeholder-white/50"
+                  className="h-11 rounded-xl bg-white/10 border-white/20 text-white placeholder-white/50"
                 />
                 {creatorErrors.supplier_name && (
                   <p className="text-sm text-red-500">
@@ -78,7 +79,7 @@ export function SupplierInfoStep({
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 min-w-0">
                 <Label htmlFor="contact_email" className="text-white/80">
                   Contact email *
                 </Label>
@@ -93,7 +94,7 @@ export function SupplierInfoStep({
                     },
                   })}
                   placeholder="contact@company.com"
-                  className="rounded-xl bg-white/10 border-white/20 text-white placeholder-white/50"
+                  className="h-11 rounded-xl bg-white/10 border-white/20 text-white placeholder-white/50"
                 />
                 {creatorErrors.contact_email && (
                   <p className="text-sm text-red-500">
@@ -103,27 +104,30 @@ export function SupplierInfoStep({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-3xl mx-auto w-full">
+              <div className="space-y-2 min-w-0">
                 <Label htmlFor="phone_number" className="text-white/80">
                   Phone *
                 </Label>
                 <PhoneInput
                   id="phone_number"
                   value={(watch("phone_number") as string) || ""}
-                  onChange={(val) => setValue("phone_number" as any, val)}
+                  onChange={(val) =>
+                    setValue(
+                      "phone_number" as unknown as never,
+                      val as unknown as never
+                    )
+                  }
                   placeholder="e.g. +506 8611 2403"
                 />
                 <input
                   type="hidden"
-                  {...(register as any)("phone_number", {
+                  {...register("phone_number" as unknown as never, {
                     required: "Phone is required",
                     validate: (value: string) => {
-                      const digits = (value || "").replace(/\D/g, "");
-                      return (
-                        (digits.length >= 7 && digits.length <= 15) ||
-                        "Enter a valid international phone number"
-                      );
+                      const e164 = (value || "").replace(/\s/g, "");
+                      const ok = /^\+[1-9]\d{7,14}$/.test(e164);
+                      return ok || "Enter a valid international phone number";
                     },
                   })}
                   value={(watch("phone_number") as string) || ""}
@@ -135,7 +139,7 @@ export function SupplierInfoStep({
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 min-w-0">
                 <Label htmlFor="logo_url" className="text-white/80">
                   Logo URL
                 </Label>
@@ -144,12 +148,12 @@ export function SupplierInfoStep({
                   type="url"
                   {...register("logo_url")}
                   placeholder="https://example.com/logo.png"
-                  className="rounded-xl bg-white/10 border-white/20 text-white placeholder-white/50"
+                  className="h-11 rounded-xl bg-white/10 border-white/20 text-white placeholder-white/50"
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 max-w-3xl mx-auto w-full">
               <Label htmlFor="address" className="text-white/80">
                 Address *
               </Label>
@@ -161,7 +165,7 @@ export function SupplierInfoStep({
                   maxLength: { value: 200, message: "Maximum 200 characters" },
                 })}
                 placeholder="Company physical address"
-                className="rounded-xl bg-white/10 border-white/20 text-white placeholder-white/50"
+                className="h-11 rounded-xl bg-white/10 border-white/20 text-white placeholder-white/50"
               />
               {creatorErrors.address && (
                 <p className="text-sm text-red-500">
@@ -170,7 +174,7 @@ export function SupplierInfoStep({
               )}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 max-w-3xl mx-auto w-full">
               <Label htmlFor="description" className="text-white/80">
                 Description *
               </Label>
@@ -183,7 +187,7 @@ export function SupplierInfoStep({
                 })}
                 placeholder="Describe your company and services"
                 rows={4}
-                className="rounded-xl resize-none bg-white/10 border-white/20 text-white placeholder-white/50"
+                className="rounded-xl resize-y bg-white/10 border-white/20 text-white placeholder-white/50 min-h-[100px] sm:min-h-[120px]"
               />
               {creatorErrors.description && (
                 <p className="text-sm text-red-500">
@@ -193,7 +197,7 @@ export function SupplierInfoStep({
             </div>
           </div>
 
-          <div className="pt-6 border-t border-white/10 mt-6">
+          <div className="pt-6 border-t border-white/10 mt-6 max-w-3xl mx-auto w-full">
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <Button
                 type="button"
@@ -235,7 +239,11 @@ export function SupplierInfoStep({
               id="supplier_id"
               {...register("supplier_id", {
                 required: "Supplier ID is required",
-                minLength: { value: 3, message: "Minimum 3 characters" },
+                pattern: {
+                  value:
+                    /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/,
+                  message: "Must be a valid UUID v4",
+                },
                 setValueAs: (v) => (typeof v === "string" ? v.trim() : v),
               })}
               placeholder="Enter the existing supplier ID"

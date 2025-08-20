@@ -153,12 +153,12 @@ export function BasicInfoStep({ data, onNext }: BasicInfoStepProps) {
             />
             <input
               type="hidden"
-              {...(register as any)("phone", {
+              {...register("phone" as unknown as never, {
                 required: "Phone is required",
                 validate: (value: string) => {
                   const digits = (value || "").replace(/\D/g, "");
                   return (
-                    (digits.length >= 7 && digits.length <= 15) ||
+                    (digits.length >= 8 && digits.length <= 15) ||
                     "Enter a valid international phone number"
                   );
                 },

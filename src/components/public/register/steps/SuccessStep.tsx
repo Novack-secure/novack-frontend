@@ -101,20 +101,7 @@ export function SuccessStep({ data, onFinish }: SuccessStepProps) {
         )}
       </div>
 
-      <div className="pt-6 border-t border-white/10">
-        <div className="text-center space-y-4">
-          <p className="text-sm text-white/70">
-            You will receive a confirmation email in the next few minutes.
-          </p>
-          <Button
-            onClick={onFinish}
-            className="relative w-full rounded-xl h-11 sm:h-12 text-sm sm:text-base font-semibold overflow-hidden bg-gradient-to-r from-cyan-500 to-emerald-500 text-white shadow-[0_10px_30px_rgba(7,217,217,0.35)] hover:shadow-[0_14px_40px_rgba(7,217,217,0.45)] transition-shadow"
-          >
-            <span className="relative z-10">Go to Dashboard</span>
-            <span className="pointer-events-none absolute inset-0 opacity-0 hover:opacity-20 transition-opacity bg-white" />
-          </Button>
-        </div>
-      </div>
+      {/* Botón eliminado: navegación al dashboard ocurrirá después de confirmar SMS */}
     </div>
   );
 }
