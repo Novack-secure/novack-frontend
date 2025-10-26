@@ -1,24 +1,53 @@
-import axios from 'axios';
+import axios from "axios";
 
-// Usar proxy interno de Next.js en lugar de URL absoluta
-const baseURL = '/api';
-
-export const api = axios.create({
-  baseURL,
-  withCredentials: true,
+// Crear instancia de Axios
+const api = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000",
+  timeout: 10000,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
-export function extractDigits(raw: string | undefined | null): string {
-  if (!raw) return '';
-  return String(raw).replace(/\D/g, '');
-}
+// Interceptor para agregar token a las peticiones
+api.interceptors.request.use(
+  (config) => {
+    // Solo acceder a localStorage en el cliente
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("access_token");
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
-export function lastNDigits(raw: string, n: number): string {
-  if (!raw) return '';
-  return raw.slice(-n);
-}
+// Interceptor para manejar respuestas
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token expirado o inválido - solo en el cliente
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("user");
+        
+        // Redirigir al login si no estamos ya ahí
+        if (!window.location.pathname.includes("/login")) {
+          window.location.href = "/login";
+        }
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
-
+export { api };
+export default api;

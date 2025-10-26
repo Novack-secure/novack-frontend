@@ -5,28 +5,127 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogOut, CreditCard, Plus, Search, User, Building, QrCode, Battery, Wifi, MoreVertical, Edit, Trash2 } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  LogOut,
+  CreditCard,
+  Plus,
+  Search,
+  User,
+  Building,
+  QrCode,
+  Battery,
+  Wifi,
+  MoreVertical,
+  Edit,
+  Trash2,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { cardService, type Card as CardType } from "@/lib/services";
+import { handleApiError, showSuccess } from "@/lib/utils/error-handler";
 
 export default function CardAdminPage() {
-  const { user, isAuthenticated, logout, isLoading } = useAuth();
+  const { user, isAuthenticated, logout, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
+  const [cards, setCards] = useState<CardType[]>([]);
+  const [filteredCards, setFilteredCards] = useState<CardType[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (!authLoading && !isAuthenticated) {
       router.push("/login");
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, authLoading, router]);
 
-  if (isLoading) {
+  useEffect(() => {
+    if (isAuthenticated && user?.supplier_id) {
+      loadCards();
+    }
+  }, [isAuthenticated, user]);
+
+  useEffect(() => {
+    // Filtrar tarjetas cuando cambia el término de búsqueda
+    if (searchTerm.trim() === "") {
+      setFilteredCards(cards);
+    } else {
+      const filtered = cards.filter(
+        (card) =>
+          card.card_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          card.assigned_to?.first_name
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          card.assigned_to?.last_name
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          card.status.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredCards(filtered);
+    }
+  }, [searchTerm, cards]);
+
+  const loadCards = async () => {
+    try {
+      setIsLoading(true);
+      const data = await cardService.getAll();
+      // Filtrar tarjetas del mismo proveedor
+      const supplierCards = data.filter(
+        (card) => card.supplier_id === user?.supplier_id
+      );
+      setCards(supplierCards);
+      setFilteredCards(supplierCards);
+    } catch (error) {
+      handleApiError(error, "Error al cargar tarjetas");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteCard = async (id: string, cardNumber: string) => {
+    if (
+      !confirm(`¿Estás seguro de que deseas eliminar la tarjeta ${cardNumber}?`)
+    ) {
+      return;
+    }
+
+    try {
+      await cardService.delete(id);
+      showSuccess(
+        "Tarjeta eliminada",
+        "La tarjeta ha sido eliminada exitosamente"
+      );
+      loadCards();
+    } catch (error) {
+      handleApiError(error, "Error al eliminar tarjeta");
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
+
+  if (authLoading || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-black">
-        <div className="text-white text-lg">Cargando...</div>
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-[#07D9D9] border-t-transparent rounded-full animate-spin" />
+          <p className="text-white text-lg">Cargando tarjetas...</p>
+        </div>
       </div>
     );
   }
@@ -35,12 +134,17 @@ export default function CardAdminPage() {
     return null;
   }
 
-  const handleLogout = () => {
-    logout();
-    router.push("/login");
+  // Estadísticas de tarjetas
+  const statsData = {
+    total: filteredCards.length,
+    active: filteredCards.filter((c) => c.status === "assigned").length,
+    available: filteredCards.filter((c) => c.status === "available").length,
+    inactive: filteredCards.filter(
+      (c) => c.status === "inactive" || c.status === "lost"
+    ).length,
   };
 
-  const cards = [
+  const oldCards = [
     {
       id: 1,
       cardNumber: "A1B2C3D4",
@@ -50,7 +154,7 @@ export default function CardAdminPage() {
       battery: 85,
       lastUsed: "2024-12-01 08:30",
       department: "Tecnología",
-      avatar: "MG"
+      avatar: "MG",
     },
     {
       id: 2,
@@ -61,7 +165,7 @@ export default function CardAdminPage() {
       battery: 45,
       lastUsed: "2024-12-01 09:15",
       department: "Ingeniería",
-      avatar: "CR"
+      avatar: "CR",
     },
     {
       id: 3,
@@ -72,7 +176,7 @@ export default function CardAdminPage() {
       battery: 0,
       lastUsed: "2024-11-28 14:20",
       department: "Administración",
-      avatar: "AM"
+      avatar: "AM",
     },
     {
       id: 4,
@@ -83,7 +187,7 @@ export default function CardAdminPage() {
       battery: 92,
       lastUsed: "2024-12-01 07:45",
       department: "Seguridad",
-      avatar: "LH"
+      avatar: "LH",
     },
     {
       id: 5,
@@ -94,35 +198,68 @@ export default function CardAdminPage() {
       battery: 78,
       lastUsed: "2024-12-01 10:00",
       department: "Dirección",
-      avatar: "SL"
-    }
+      avatar: "SL",
+    },
   ];
 
   const getStatusColor = (status: string) => {
-    return status === "active" ? "bg-green-500/20 text-green-400 border-green-500/30" : "bg-red-500/20 text-red-400 border-red-500/30";
+    switch (status) {
+      case "assigned":
+        return "bg-green-500/20 text-green-400 border-green-500/30";
+      case "available":
+        return "bg-blue-500/20 text-blue-400 border-blue-500/30";
+      case "inactive":
+        return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+      case "lost":
+        return "bg-red-500/20 text-red-400 border-red-500/30";
+      default:
+        return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+    }
   };
 
-  const getBatteryColor = (percentage: number) => {
+  const getBatteryColor = (percentage?: number) => {
+    if (!percentage) return "text-gray-400";
     if (percentage >= 70) return "text-green-400";
     if (percentage >= 30) return "text-yellow-400";
     return "text-red-400";
   };
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case "Administrador": return "bg-purple-500/20 text-purple-400 border-purple-500/30";
-      case "Empleado": return "bg-blue-500/20 text-blue-400 border-blue-500/30";
-      case "Estudiante": return "bg-green-500/20 text-green-400 border-green-500/30";
-      case "Visitante": return "bg-orange-500/20 text-orange-400 border-orange-500/30";
-      default: return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case "assigned":
+        return "Asignada";
+      case "available":
+        return "Disponible";
+      case "inactive":
+        return "Inactiva";
+      case "lost":
+        return "Perdida";
+      default:
+        return status;
     }
   };
 
-  const filteredCards = cards.filter(card =>
-    card.holderName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    card.cardNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    card.department.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const getHolderName = (card: CardType): string => {
+    if (!card.assigned_to) return "Sin asignar";
+    if ("first_name" in card.assigned_to) {
+      return `${card.assigned_to.first_name} ${card.assigned_to.last_name}`;
+    }
+    if ("name" in card.assigned_to) {
+      return card.assigned_to.name;
+    }
+    return "Sin asignar";
+  };
+
+  const getHolderInitials = (card: CardType): string => {
+    const name = getHolderName(card);
+    if (name === "Sin asignar") return "SA";
+    const parts = name.split(" ");
+    return parts
+      .map((p) => p[0])
+      .join("")
+      .substring(0, 2)
+      .toUpperCase();
+  };
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -131,7 +268,7 @@ export default function CardAdminPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <motion.h1 
+              <motion.h1
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 className="text-xl font-bold"
@@ -140,7 +277,7 @@ export default function CardAdminPage() {
               </motion.h1>
             </div>
             <div className="flex items-center space-x-4">
-              <motion.span 
+              <motion.span
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className="text-sm text-gray-300"
@@ -201,7 +338,9 @@ export default function CardAdminPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-400">Total Tarjetas</p>
-                  <p className="text-2xl font-bold text-white">156</p>
+                  <p className="text-2xl font-bold text-white">
+                    {statsData.total}
+                  </p>
                 </div>
                 <CreditCard className="w-8 h-8 text-[#07D9D9]" />
               </div>
@@ -212,8 +351,10 @@ export default function CardAdminPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-400">Activas</p>
-                  <p className="text-2xl font-bold text-white">142</p>
+                  <p className="text-sm text-gray-400">Asignadas</p>
+                  <p className="text-2xl font-bold text-white">
+                    {statsData.active}
+                  </p>
                 </div>
                 <Wifi className="w-8 h-8 text-green-400" />
               </div>
@@ -224,10 +365,12 @@ export default function CardAdminPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-400">Baja Batería</p>
-                  <p className="text-2xl font-bold text-white">8</p>
+                  <p className="text-sm text-gray-400">Disponibles</p>
+                  <p className="text-2xl font-bold text-white">
+                    {statsData.available}
+                  </p>
                 </div>
-                <Battery className="w-8 h-8 text-yellow-400" />
+                <Battery className="w-8 h-8 text-blue-400" />
               </div>
             </CardContent>
           </Card>
@@ -237,7 +380,9 @@ export default function CardAdminPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-400">Inactivas</p>
-                  <p className="text-2xl font-bold text-white">14</p>
+                  <p className="text-2xl font-bold text-white">
+                    {statsData.inactive}
+                  </p>
                 </div>
                 <QrCode className="w-8 h-8 text-red-400" />
               </div>
@@ -288,26 +433,46 @@ export default function CardAdminPage() {
                     <div className="flex items-center gap-3">
                       <Avatar className="h-10 w-10 border border-[#07D9D9]/30">
                         <AvatarFallback className="bg-[#07D9D9] text-[#010440] font-semibold">
-                          {card.avatar}
+                          {getHolderInitials(card)}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <h3 className="font-semibold text-white">{card.holderName}</h3>
-                        <p className="text-sm text-gray-400">#{card.cardNumber}</p>
+                        <h3 className="font-semibold text-white">
+                          {getHolderName(card)}
+                        </h3>
+                        <p className="text-sm text-gray-400">
+                          #{card.card_number}
+                        </p>
                       </div>
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="text-gray-400 hover:text-[#07D9D9]">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-gray-400 hover:text-[#07D9D9]"
+                        >
                           <MoreVertical className="w-5 h-5" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="bg-black border-white/10">
-                        <DropdownMenuItem className="text-white">
+                        <DropdownMenuItem
+                          className="text-white"
+                          onClick={() =>
+                            router.push(
+                              `/management/supplier/cardAdmin/${card.id}`
+                            )
+                          }
+                        >
                           <Edit className="w-4 h-4 mr-2" />
                           Editar
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-400">
+                        <DropdownMenuItem
+                          className="text-red-400"
+                          onClick={() =>
+                            handleDeleteCard(card.id, card.card_number)
+                          }
+                        >
                           <Trash2 className="w-4 h-4 mr-2" />
                           Eliminar
                         </DropdownMenuItem>
@@ -318,43 +483,56 @@ export default function CardAdminPage() {
                   {/* Card Details */}
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-400">Tipo</span>
-                      <Badge className={getTypeColor(card.type)}>
-                        {card.type}
-                      </Badge>
-                    </div>
-
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-400">Departamento</span>
-                      <div className="flex items-center gap-1">
-                        <Building className="w-3 h-3 text-gray-400" />
-                        <span className="text-sm text-white">{card.department}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-400">Batería</span>
-                      <div className="flex items-center gap-1">
-                        <Battery className={`w-4 h-4 ${getBatteryColor(card.battery)}`} />
-                        <span className={`text-sm ${getBatteryColor(card.battery)}`}>
-                          {card.battery}%
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-400">Estado</span>
                       <Badge className={getStatusColor(card.status)}>
-                        {card.status === "active" ? "Activa" : "Inactiva"}
+                        {getStatusText(card.status)}
                       </Badge>
                     </div>
 
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-400">Último Uso</span>
-                      <span className="text-sm text-white">
-                        {new Date(card.lastUsed).toLocaleDateString()}
-                      </span>
-                    </div>
+                    {card.battery_level !== undefined && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-400">Batería</span>
+                        <div className="flex items-center gap-1">
+                          <Battery
+                            className={`w-4 h-4 ${getBatteryColor(
+                              card.battery_level
+                            )}`}
+                          />
+                          <span
+                            className={`text-sm ${getBatteryColor(
+                              card.battery_level
+                            )}`}
+                          >
+                            {card.battery_level}%
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {card.last_seen && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-400">
+                          Última actividad
+                        </span>
+                        <span className="text-sm text-white">
+                          {new Date(card.last_seen).toLocaleDateString()}
+                        </span>
+                      </div>
+                    )}
+
+                    {card.assigned_to && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-400">
+                          Asignada a
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <User className="w-3 h-3 text-[#07D9D9]" />
+                          <span className="text-sm text-white truncate max-w-[150px]">
+                            {getHolderName(card)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Actions */}

@@ -1,6 +1,6 @@
-import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/layouts/AppSidebar"
-import React from "react"
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/layouts/AppSidebar";
+import React from "react";
 
 export default async function PrivateLayout({
   children,
@@ -8,19 +8,13 @@ export default async function PrivateLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <SidebarProvider
-      style={
-        {
-          "--sidebar-width": "250px",
-          "--sidebar-width-icon": "60px",
-        } as React.CSSProperties
-      }
-    >
-      <AppSidebar />
-      <SidebarInset>
-        <SidebarTrigger />
-        {children}
-      </SidebarInset>
+    <SidebarProvider>
+      <div className="flex h-screen w-full bg-black">
+        <AppSidebar />
+        <SidebarInset>
+          <div className="h-full">{children}</div>
+        </SidebarInset>
+      </div>
     </SidebarProvider>
-  )
+  );
 }

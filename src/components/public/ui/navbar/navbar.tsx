@@ -62,14 +62,22 @@ export const Navbar = () => {
           <NavbarLink href="/blog" title="Blog" />
         </div>
 
-        <Link
-          href="/register"
-          type="button"
-          className="hidden md:block text-sm border-2 border-[#07D9D9] rounded-xl hover:bg-[#07D9D9] px-6 py-2 hover:text-[#010440] bg-transparent text-[#07D9D9] hover:shadow-lg transition-all duration-300"
-        >
-          Register
-        </Link>
-
+        <div className="flex gap-4">
+          <Link
+            href="/login"
+            type="button"
+            className="hidden md:block text-sm border-2 border-[#07D9D9] rounded-xl hover:bg-[#07D9D9] px-6 py-2 hover:text-[#010440] bg-transparent text-[#07D9D9] hover:shadow-lg transition-all duration-300"
+          >
+            Login
+          </Link>
+          <Link
+            href="/register"
+            type="button"
+            className="hidden md:block text-sm border-2 border-[#07D9D9] rounded-xl hover:bg-[#07D9D9] px-6 py-2 hover:text-[#010440] bg-transparent text-[#07D9D9] hover:shadow-lg transition-all duration-300"
+          >
+            Register
+          </Link>
+        </div>
         <button
           className="md:hidden flex flex-col justify-center items-center w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm p-2 border border-white/20"
           onClick={() => setIsOpen(!isOpen)}

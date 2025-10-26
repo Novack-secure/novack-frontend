@@ -1,13 +1,15 @@
 "use client";
 
-import {
-  useState,
-  useEffect,
+import React, {
   createContext,
   useContext,
-  ReactNode,
+  useState,
+  useEffect,
+  useCallback,
 } from "react";
 import { api } from "@/lib/api";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface User {
   id: string;
@@ -23,125 +25,108 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  isLoading: boolean;
   isAuthenticated: boolean;
-  login: (
-    tokens: { access_token: string; refresh_token?: string },
-    userData: User
-  ) => void;
+  login: (accessToken: string, refreshToken: string, user: User) => void;
   logout: () => void;
-  refreshToken: () => Promise<boolean>;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
-  useEffect(() => {
-    // Verificar si hay tokens guardados al cargar la app
-    const accessToken = localStorage.getItem("access_token");
-    const userData = localStorage.getItem("user");
+  const loadUserFromStorage = useCallback(async () => {
+    try {
+      const storedUser = localStorage.getItem("user");
+      const accessToken = localStorage.getItem("access_token");
+      console.log("🔍 Loading user from storage:", {
+        storedUser,
+        accessToken: !!accessToken,
+      });
 
-    if (accessToken && userData) {
-      try {
-        const parsedUser = JSON.parse(userData);
+      if (storedUser && accessToken) {
+        const parsedUser: User = JSON.parse(storedUser);
+        console.log("🔍 Parsed user:", parsedUser);
+        
+        // Si el usuario no tiene supplier, intentar obtenerlo del backend
+        if (!parsedUser.supplier) {
+          console.log("⚠️ User missing supplier, fetching from backend...");
+          try {
+            const response = await api.get(`/employees/${parsedUser.id}`);
+            if (response.data.supplier) {
+              parsedUser.supplier = response.data.supplier;
+              localStorage.setItem("user", JSON.stringify(parsedUser));
+              console.log("✅ Supplier updated:", parsedUser.supplier);
+            }
+          } catch (error) {
+            console.error("❌ Failed to fetch supplier:", error);
+          }
+        }
+        
         setUser(parsedUser);
-        api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
-      } catch (error) {
-        console.error("Error parsing user data:", error);
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        localStorage.removeItem("user");
+        setIsAuthenticated(true);
+      } else {
+        console.log("❌ No user or token found in storage");
+        setUser(null);
+        setIsAuthenticated(false);
       }
+    } catch (error) {
+      console.error("❌ Failed to load user from storage:", error);
+      setUser(null);
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }, []);
 
-  const login = (
-    tokens: { access_token: string; refresh_token?: string },
-    userData: User
-  ) => {
-    localStorage.setItem("access_token", tokens.access_token);
-    if (tokens.refresh_token) {
-      localStorage.setItem("refresh_token", tokens.refresh_token);
-    }
-    localStorage.setItem("user", JSON.stringify(userData));
+  useEffect(() => {
+    loadUserFromStorage();
+  }, [loadUserFromStorage]);
 
-    setUser(userData);
-    api.defaults.headers.common[
-      "Authorization"
-    ] = `Bearer ${tokens.access_token}`;
-  };
+  const login = useCallback(
+    (accessToken: string, refreshToken: string, userData: User) => {
+      localStorage.setItem("access_token", accessToken);
+      localStorage.setItem("refresh_token", refreshToken);
+      localStorage.setItem("user", JSON.stringify(userData));
+      setUser(userData);
+      setIsAuthenticated(true);
+      toast.success("Inicio de sesión exitoso");
+      router.push("/home");
+    },
+    [router]
+  );
 
-  const logout = () => {
-    const refreshToken = localStorage.getItem("refresh_token");
-
-    // Llamar al endpoint de logout si hay refresh token
-    if (refreshToken) {
-      api
-        .post("/auth/logout", { refresh_token: refreshToken })
-        .catch(console.error);
-    }
-
-    // Limpiar localStorage
+  const logout = useCallback(() => {
+    setIsLoading(true);
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
     localStorage.removeItem("user");
-
-    // Limpiar header de autorización
-    delete api.defaults.headers.common["Authorization"];
-
     setUser(null);
-  };
+    setIsAuthenticated(false);
+    toast.info("Sesión cerrada");
+    router.push("/login");
+    setIsLoading(false);
+  }, [router]);
 
-  const refreshToken = async (): Promise<boolean> => {
-    const refreshTokenValue = localStorage.getItem("refresh_token");
+  return (
+    <AuthContext.Provider
+      value={{ user, isAuthenticated, login, logout, isLoading }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
 
-    if (!refreshTokenValue) {
-      return false;
-    }
-
-    try {
-      const { data } = await api.post("/auth/refresh-token", {
-        refresh_token: refreshTokenValue,
-      });
-
-      if (data.access_token) {
-        localStorage.setItem("access_token", data.access_token);
-        if (data.refresh_token) {
-          localStorage.setItem("refresh_token", data.refresh_token);
-        }
-        api.defaults.headers.common[
-          "Authorization"
-        ] = `Bearer ${data.access_token}`;
-        return true;
-      }
-    } catch (error) {
-      console.error("Error refreshing token:", error);
-      logout();
-    }
-
-    return false;
-  };
-
-  const value: AuthContextType = {
-    user,
-    isLoading,
-    isAuthenticated: !!user,
-    login,
-    logout,
-    refreshToken,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-}
+};

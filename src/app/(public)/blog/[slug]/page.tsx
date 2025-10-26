@@ -35,7 +35,7 @@ const BlogPostPage = async ({
     return (
       <div className="min-h-screen bg-black text-white">
         <Navbar />
-        <main className="sm:mt-24.5 md:mt-24.5 mt-22">
+        <main>
           <article className="w-full py-24">
             <div className="mx-auto px-4 sm:px-6 max-w-3xl text-center">
               <h1 className="text-4xl md:text-5xl font-bold mb-4">
@@ -59,7 +59,7 @@ const BlogPostPage = async ({
   return (
     <div className="min-h-screen bg-black text-white">
       <Navbar />
-      <main className="sm:mt-24.5 md:mt-24.5 mt-22">
+      <main>
         <div className="w-full py-10 md:py-16">
           <ArticleLayout
             title={post.title}
