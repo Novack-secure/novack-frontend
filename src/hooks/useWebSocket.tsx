@@ -16,27 +16,26 @@ export const useWebSocket = () => {
   const [currentRoom, setCurrentRoom] = useState<ChatRoom | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [hasMoreMessages, setHasMoreMessages] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const socketRef = useRef<Socket | null>(null);
   const connectingRef = useRef(false);
 
   // Cargar salas del usuario
   const loadUserRooms = useCallback(async () => {
     try {
-      console.log("✅ loadUserRooms iniciado");
       setIsLoading(true);
-
       const userRooms = await websocketService.getUserRooms();
-      console.log("✅ Salas cargadas:", userRooms.length);
 
       if (Array.isArray(userRooms)) {
         setRooms(userRooms);
-        console.log("✅ Salas establecidas en el estado:", userRooms.length);
       } else {
-        console.warn("⚠️ Los datos recibidos no son un array:", userRooms);
         setRooms([]);
       }
     } catch (error) {
-      console.error("❌ Error al cargar salas:", error);
+      console.error("Error al cargar salas:", error);
       setRooms([]);
     } finally {
       setIsLoading(false);
@@ -45,15 +44,7 @@ export const useWebSocket = () => {
 
   // Conectar WebSocket
   const connect = useCallback(async () => {
-    console.log("✅ connect() llamado");
-
-    if (connectingRef.current) {
-      console.log("🔄 Already connecting, skipping");
-      return;
-    }
-
-    if (!isAuthenticated || !user) {
-      console.log("⚠️ WebSocket - No autenticado o sin usuario");
+    if (connectingRef.current || !isAuthenticated || !user) {
       return;
     }
 
@@ -62,20 +53,18 @@ export const useWebSocket = () => {
       const token = localStorage.getItem("access_token");
 
       if (!token) {
-        console.error("❌ No se encontró token de acceso");
+        console.error("No se encontró token de acceso");
         return;
       }
 
-      console.log("✅ Conectando WebSocket...");
       const socket = await websocketService.connect(token);
       socketRef.current = socket;
       setIsConnected(true);
-      console.log("✅ WebSocket conectado y usuario registrado");
 
       // Cargar salas inmediatamente después de la conexión
       await loadUserRooms();
     } catch (error) {
-      console.error("❌ Error al conectar WebSocket:", error);
+      console.error("Error al conectar WebSocket:", error);
       setIsConnected(false);
     } finally {
       connectingRef.current = false;
@@ -96,44 +85,57 @@ export const useWebSocket = () => {
   const joinRoom = useCallback(
     async (room: ChatRoom) => {
       try {
-        console.log("🔍 joinRoom - Uniéndose a sala:", room);
-        console.log("🔍 joinRoom - WebSocket conectado:", isConnected);
-
         if (!isConnected) {
-          console.error("❌ WebSocket no está conectado");
+          console.error("WebSocket no está conectado");
           return;
         }
 
+        setIsLoadingMessages(true);
         await websocketService.joinRoom(room.id);
-        console.log("🔍 joinRoom - Estableciendo currentRoom:", room);
         setCurrentRoom(room);
-        console.log("🔍 joinRoom - currentRoom establecido");
 
-        // Cargar mensajes de la sala
-        const roomMessages = (await websocketService.getRoomMessages(
-          room.id
-        )) as Message[];
-        console.log("🔍 joinRoom - Mensajes cargados:", roomMessages.length);
-        setMessages(roomMessages);
-        console.log(
-          "🔍 joinRoom - Mensajes establecidos:",
-          roomMessages.length
-        );
-
-        // Forzar re-render después de un pequeño delay
-        setTimeout(() => {
-          console.log("🔍 joinRoom - Forzando re-render después del delay");
-          setCurrentRoom((prev) => {
-            console.log("🔍 joinRoom - currentRoom previo:", prev);
-            return room;
-          });
-        }, 100);
+        // Cargar mensajes de la sala con paginación (primeros 50)
+        const result = await websocketService.getRoomMessages(room.id, 50);
+        setMessages(result.messages);
+        setHasMoreMessages(result.hasMore);
+        setNextCursor(result.nextCursor);
       } catch (error) {
-        console.error("❌ Error al unirse a la sala:", error);
+        console.error("Error al unirse a la sala:", error);
+        // Don't show error to user, just log it and show empty messages
+        setMessages([]);
+        setHasMoreMessages(false);
+        setNextCursor(null);
+      } finally {
+        setIsLoadingMessages(false);
       }
     },
     [isConnected]
   );
+
+  // Cargar más mensajes (scroll infinito)
+  const loadMoreMessages = useCallback(async () => {
+    if (!currentRoom || !hasMoreMessages || !nextCursor || isLoadingMore) {
+      return;
+    }
+
+    try {
+      setIsLoadingMore(true);
+      const result = await websocketService.getRoomMessages(
+        currentRoom.id,
+        50,
+        nextCursor
+      );
+
+      // Prepend older messages to the beginning
+      setMessages((prevMessages) => [...result.messages, ...prevMessages]);
+      setHasMoreMessages(result.hasMore);
+      setNextCursor(result.nextCursor);
+    } catch (error) {
+      console.error("Error al cargar más mensajes:", error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [currentRoom, hasMoreMessages, nextCursor, isLoadingMore]);
 
   // Salir de una sala
   const leaveRoom = useCallback(async () => {
@@ -211,12 +213,7 @@ export const useWebSocket = () => {
   const createPrivateRoom = useCallback(
     async (targetUserId: string, targetUserType: "employee" | "visitor") => {
       try {
-        console.log("🔍 createPrivateRoom - WebSocket conectado:", isConnected);
-        console.log("🔍 createPrivateRoom - targetUserId:", targetUserId);
-        console.log("🔍 createPrivateRoom - targetUserType:", targetUserType);
-
         if (!isConnected) {
-          console.error("❌ WebSocket no está conectado");
           throw new Error("WebSocket no está conectado");
         }
 
@@ -224,7 +221,6 @@ export const useWebSocket = () => {
           targetUserId,
           targetUserType
         );
-        console.log("🔍 createPrivateRoom - Sala creada:", newRoom);
 
         // Actualizar la lista de salas inmediatamente
         setRooms((prev) => {
@@ -242,7 +238,7 @@ export const useWebSocket = () => {
 
         return newRoom;
       } catch (error) {
-        console.error("❌ Error al crear sala privada:", error);
+        console.error("Error al crear sala privada:", error);
         throw error;
       }
     },
@@ -313,31 +309,15 @@ export const useWebSocket = () => {
     };
   }, [isConnected]);
 
-  // No necesitamos polling constante - Socket.IO maneja el estado de conexión
-
-  // Debug: Monitorear cambios en currentRoom
-  useEffect(() => {
-    console.log("🔍 currentRoom cambió:", currentRoom);
-  }, [currentRoom]);
-
   // Auto-conectar cuando el usuario está autenticado
   useEffect(() => {
-    console.log("🔍 useEffect de conexión ejecutado");
-    console.log("🔍 isAuthenticated:", isAuthenticated);
-    console.log("🔍 user:", !!user);
-    console.log("🔍 isConnected:", isConnected);
-
     if (isAuthenticated && user && !isConnected) {
-      console.log("🔍 Condiciones cumplidas, conectando...");
       connect();
-    } else {
-      console.log("🔍 Condiciones no cumplidas para conectar");
     }
 
     // Cleanup al desmontar
     return () => {
       if (isConnected) {
-        console.log("🔍 Cleanup: desconectando WebSocket");
         disconnect();
       }
     };
@@ -347,9 +327,12 @@ export const useWebSocket = () => {
     // Estado
     isConnected,
     isLoading,
+    isLoadingMessages,
     rooms,
     currentRoom,
     messages,
+    hasMoreMessages,
+    isLoadingMore,
 
     // Métodos
     connect,
@@ -360,5 +343,6 @@ export const useWebSocket = () => {
     sendMessage,
     sendMessageToBot,
     createPrivateRoom,
+    loadMoreMessages,
   };
 };

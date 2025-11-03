@@ -341,34 +341,72 @@ class WebSocketService {
   }
 
   /**
-   * Obtiene los mensajes de una sala
+   * Obtiene los mensajes de una sala con paginación
    */
-  getRoomMessages(roomId: string): Promise<Message[]> {
+  getRoomMessages(
+    roomId: string,
+    limit: number = 50,
+    cursor?: string
+  ): Promise<{ messages: Message[]; hasMore: boolean; nextCursor: string | null }> {
     if (!this.socket || !this.socket.connected) {
       return Promise.reject(new Error("WebSocket no está conectado"));
     }
 
     return new Promise((resolve, reject) => {
+      let timeoutId: NodeJS.Timeout;
+      let hasResponded = false;
+
       const timeout = setTimeout(() => {
-        reject(new Error("Timeout al obtener mensajes"));
-      }, 5000);
+        if (!hasResponded) {
+          hasResponded = true;
+          console.warn("⏱️ Timeout al obtener mensajes después de 15s - retornando mensajes vacíos");
+          // Resolve with empty messages instead of rejecting
+          resolve({
+            messages: [],
+            hasMore: false,
+            nextCursor: null,
+          });
+        }
+      }, 15000); // Increased timeout to 15 seconds
 
-      this.socket!.emit("getMessages", { roomId }, (response: any) => {
-        clearTimeout(timeout);
-        console.log("🔍 getMessages response:", response);
-
-        if (!response) {
-          reject(new Error("No se recibió respuesta del servidor"));
+      this.socket!.emit("getRoomMessages", { roomId, limit, cursor }, (response: any) => {
+        if (hasResponded) {
+          console.warn("⚠️ Respuesta recibida después del timeout, ignorando");
           return;
         }
 
-        if (response.success === false || response.error) {
-          reject(new Error(response.message || response.error));
+        hasResponded = true;
+        clearTimeout(timeout);
+        console.log("🔍 getRoomMessages response:", response);
+
+        if (!response) {
+          // If no response, return empty messages instead of failing
+          console.warn("⚠️ No se recibió respuesta, retornando mensajes vacíos");
+          resolve({
+            messages: [],
+            hasMore: false,
+            nextCursor: null,
+          });
+          return;
+        }
+
+        if (response.status === "error" || response.error) {
+          console.warn("⚠️ Error al obtener mensajes:", response.message || response.error);
+          // Return empty messages instead of rejecting
+          resolve({
+            messages: [],
+            hasMore: false,
+            nextCursor: null,
+          });
         } else {
           // Mapear mensajes del backend al formato frontend
-          const messages = (response.data || []).map(mapServerMessage);
-          console.log("🔍 getMessages mensajes mapeados:", messages);
-          resolve(messages);
+          const messages = (response.messages || []).map(mapServerMessage);
+          console.log("🔍 getRoomMessages mensajes mapeados:", messages.length, "hasMore:", response.hasMore);
+          resolve({
+            messages,
+            hasMore: response.hasMore || false,
+            nextCursor: response.nextCursor || null,
+          });
         }
       });
     });

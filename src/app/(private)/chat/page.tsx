@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import {
   Search,
@@ -14,32 +14,37 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { useAuth } from "@/hooks/useAuth";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import ContactList from "@/components/chat/ContactList";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import ChatRoomItem from "@/components/chat/ChatRoomItem";
+import ChatMessages from "@/components/chat/ChatMessages";
+import { Badge } from "@/components/ui/badge";
 
 export default function ChatPage() {
   const { user } = useAuth();
   const {
     isConnected,
     isLoading,
+    isLoadingMessages,
     rooms,
     currentRoom,
     messages,
+    hasMoreMessages,
+    isLoadingMore,
     joinRoom,
     sendMessage,
+    loadMoreMessages,
   } = useWebSocket();
 
   const [messageInput, setMessageInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [showContacts, setShowContacts] = useState(false);
   const [isSending, setIsSending] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Obtener el nombre del otro participante en chat privado
-  const getOtherParticipantName = (room: any) => {
+  // Obtener el nombre del otro participante en chat privado (memoizado)
+  const getOtherParticipantName = useCallback((room: any) => {
     if (room.roomType === "private" && room.participants) {
       const otherParticipant = room.participants.find(
         (p: any) => p.id !== user?.id
@@ -49,9 +54,9 @@ export default function ChatPage() {
       }
     }
     return null;
-  };
+  }, [user?.id]);
 
-  const getInitials = (name: string) => {
+  const getInitials = useCallback((name: string) => {
     if (!name) return "U";
     return name
       .split(" ")
@@ -59,9 +64,9 @@ export default function ChatPage() {
       .map((w) => w[0])
       .join("")
       .toUpperCase();
-  };
+  }, []);
 
-  const formatTime = (dateString: string) => {
+  const formatTime = useCallback((dateString: string) => {
     try {
       const date = new Date(dateString);
       return date.toLocaleTimeString("es-ES", {
@@ -71,16 +76,11 @@ export default function ChatPage() {
     } catch {
       return "";
     }
-  };
+  }, []);
 
-  const isOwnMessage = (message: any) => {
+  const isOwnMessage = useCallback((message: any) => {
     return message.senderId === user?.id && message.senderType === "employee";
-  };
-
-  // Auto-scroll al último mensaje
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [user?.id]);
 
   // Auto-focus en el input
   useEffect(() => {
@@ -89,11 +89,18 @@ export default function ChatPage() {
     }
   }, [currentRoom]);
 
-  // Filtrar salas
-  const filteredRooms = rooms.filter((room) => {
-    const roomName = getOtherParticipantName(room) || room.name || "";
-    return roomName.toLowerCase().includes(searchQuery.toLowerCase());
-  });
+  // Memoizar el handler de join room
+  const handleJoinRoom = useCallback((room: any) => {
+    joinRoom(room);
+  }, [joinRoom]);
+
+  // Filtrar salas (memoizado)
+  const filteredRooms = useMemo(() => {
+    return rooms.filter((room) => {
+      const roomName = getOtherParticipantName(room) || room.name || "";
+      return roomName.toLowerCase().includes(searchQuery.toLowerCase());
+    });
+  }, [rooms, searchQuery, getOtherParticipantName]);
 
   // Enviar mensaje
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -194,46 +201,14 @@ export default function ChatPage() {
               ) : (
                 <div className="space-y-1">
                   {filteredRooms.map((room) => (
-                    <div
+                    <ChatRoomItem
                       key={room.id}
-                      onClick={() => joinRoom(room)}
-                      className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${
-                        currentRoom?.id === room.id
-                          ? "bg-[#07D9D9]/10 border border-[#07D9D9]/30"
-                          : "hover:bg-white/5"
-                      }`}
-                    >
-                      <Avatar className="h-9 w-9 border border-[#07D9D9]/30">
-                        <AvatarFallback className="bg-[#07D9D9] text-[#010440] text-xs font-bold">
-                          {room.roomType === "group" ? (
-                            <Users className="w-4 h-4" />
-                          ) : room.roomType === "supplier" ? (
-                            <Bot className="w-4 h-4" />
-                          ) : (
-                            getInitials(
-                              getOtherParticipantName(room) ||
-                                room.name ||
-                                "U"
-                            )
-                          )}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-white truncate">
-                          {getOtherParticipantName(room) ||
-                            room.name ||
-                            "Chat"}
-                        </p>
-                        <p className="text-xs text-gray-400 truncate">
-                          {room.lastMessage?.content || "Sin mensajes"}
-                        </p>
-                      </div>
-                      {room.unreadCount && room.unreadCount > 0 && (
-                        <Badge className="h-4 px-1.5 text-xs bg-[#07D9D9] text-[#010440]">
-                          {room.unreadCount}
-                        </Badge>
-                      )}
-                    </div>
+                      room={room}
+                      isActive={currentRoom?.id === room.id}
+                      onClick={() => handleJoinRoom(room)}
+                      getInitials={getInitials}
+                      getOtherParticipantName={getOtherParticipantName}
+                    />
                   ))}
                 </div>
               )}
@@ -279,61 +254,15 @@ export default function ChatPage() {
               </div>
 
               {/* Messages Area */}
-              <ScrollArea className="flex-1 p-4">
-                {messages.length === 0 ? (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="text-center">
-                      <MessageCircle className="w-12 h-12 text-gray-500 mx-auto mb-3" />
-                      <p className="text-sm text-gray-400">No hay mensajes</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {messages.map((message) => {
-                      const isOwn = isOwnMessage(message);
-                      const isBot = message.senderType === "bot";
-
-                      return (
-                        <div
-                          key={message.id}
-                          className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
-                        >
-                          <div
-                            className={`max-w-[70%] ${isOwn ? "items-end" : "items-start"} flex flex-col gap-1`}
-                          >
-                            {!isOwn && (
-                              <span className="text-xs text-gray-400 px-3">
-                                {isBot
-                                  ? "Bot"
-                                  : `${message.sender?.first_name || "Usuario"}`}
-                              </span>
-                            )}
-                            <div
-                              className={`px-3 py-2 rounded-xl ${
-                                isOwn
-                                  ? "bg-[#07D9D9] text-[#010440] rounded-br-sm"
-                                  : isBot
-                                  ? "bg-purple-500/20 text-white border border-purple-500/30 rounded-bl-sm"
-                                  : "bg-white/10 text-white rounded-bl-sm"
-                              }`}
-                            >
-                              <p className="text-sm leading-relaxed">
-                                {message.content}
-                              </p>
-                              <span
-                                className={`text-xs mt-1 block ${isOwn ? "text-[#010440]/60" : "text-gray-400"}`}
-                              >
-                                {formatTime(message.createdAt)}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                    <div ref={messagesEndRef} />
-                  </div>
-                )}
-              </ScrollArea>
+              <ChatMessages
+                messages={messages}
+                hasMoreMessages={hasMoreMessages}
+                isLoadingMore={isLoadingMore}
+                isLoadingMessages={isLoadingMessages}
+                loadMoreMessages={loadMoreMessages}
+                isOwnMessage={isOwnMessage}
+                formatTime={formatTime}
+              />
 
               {/* Input Area */}
               <div className="p-3 border-t border-white/10 bg-white/5">
