@@ -1,7 +1,11 @@
-export default function page() {
+import RegistrationStepper from "@/components/public/register/RegistrationStepper";
+import BackHeader from "@/components/public/register/BackHeader";
+
+export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <h1>Welcome to Register</h1>
-    </div>
+    <main>
+      <BackHeader />
+      <RegistrationStepper />
+    </main>
   );
 }

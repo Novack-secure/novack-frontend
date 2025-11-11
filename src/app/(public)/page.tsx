@@ -1,14 +1,19 @@
-import HeroSection from "../../components/home/ui/secctions/hero-section/heroSection";
-import { Navbar } from "@/components/home/ui/navbar/navbar";
+import { Navbar } from "@/components/public/ui/navbar/navbar";
+import Footer from "@/components/ui/footer/footer";
+import CtaSection from "@/components/public/home/ui/secctions/cta/cta-section";
+import HeroSection from "@/components/public/home/ui/secctions/hero/hero-section";
+import FeatureHighlightSection from "@/components/public/home/ui/secctions/example/feature-highlight-section";
 
 export default function page() {
   return (
-    <>
+    <div className="min-h-screen bg-black">
       <Navbar />
-
-      <main className="m-4 mt-24.5">
+      <main className="pt-20 sm:pt-24 md:pt-28">
         <HeroSection />
+        <FeatureHighlightSection />
+        <CtaSection />
       </main>
-    </>
+      <Footer />
+    </div>
   );
 }

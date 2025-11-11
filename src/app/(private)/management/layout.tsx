@@ -1,20 +1,25 @@
-import { Inter } from "next/font/google";
-import "./../../globals.css";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/layouts/AppSidebar";
+import type { Metadata } from "next";
+import React from "react";
 
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
+export const metadata: Metadata = {
+  title: "Gestión",
+};
 
-export default function Layout({
+export default async function ManagementLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.className}>
-      <body>{children}</body>
-    </html>
+    <SidebarProvider>
+      <div className="flex h-screen w-full bg-black">
+        <AppSidebar />
+        <SidebarInset>
+          <div className="h-full">{children}</div>
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
   );
 }

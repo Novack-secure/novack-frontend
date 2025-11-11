@@ -21,8 +21,8 @@ module.exports = {
   },
   ignorePatterns: ["!**/.server", "!**/.client"],
 
-  // Base config
-  extends: ["eslint:recommended"],
+  // Base config - Next.js debe estar primero
+  extends: ["next/core-web-vitals", "eslint:recommended"],
 
   overrides: [
     // React
@@ -45,7 +45,12 @@ module.exports = {
           { name: "NavLink", linkAttribute: "to" },
         ],
         "import/resolver": {
-          typescript: {},
+          typescript: {
+            alwaysTryTypes: true,
+          },
+          node: {
+            extensions: [".js", ".jsx", ".ts", ".tsx"],
+          },
         },
       },
     },
@@ -59,10 +64,11 @@ module.exports = {
         "import/internal-regex": "^~/",
         "import/resolver": {
           node: {
-            extensions: [".ts", ".tsx"],
+            extensions: [".js", ".jsx", ".ts", ".tsx"],
           },
           typescript: {
             alwaysTryTypes: true,
+            project: "./tsconfig.json",
           },
         },
       },
